@@ -1,0 +1,30 @@
+
+
+<template name="login_hello">
+
+	<div class="container">
+		<h1>Clamour</h1>
+
+		<h2>Please Login</h2>
+		Ticket Code<br/>
+		<input class="login" id="loginTC"></input><br/>
+		Seat<br/>
+		<select class="login" id="loginSR">
+		  {{#each seatRows}}
+		  	<option value={{this}}>{{this}}</option>
+		  {{/each}}
+		</select>
+		
+		<select class="login" id="loginSN">
+		  {{#each seatNumbers}}
+		  	<option value={{this}}>{{this}}</option>
+		  {{/each}}
+		</select>
+		
+		<br/>
+		
+		<button class="login">Login</button>
+	</div>
+
+</template>
+
