@@ -55,11 +55,10 @@ Meteor.startup(function(){
 	
 	sock = dgram.createSocket('udp4', function(msg, rinfo) {
 	
-		try{
-			return console.log(osc.fromBuffer(msg));
-		}catch(error){
-			return console.log("invalid OSC packet");
-		}
+		
+		parseIncomingOsc(osc.fromBuffer(msg));
+		
+			
 	
 	});
 	
@@ -167,6 +166,8 @@ Meteor.methods({
 	
 	},
 
+	
+
 	start: function() {
   
 	  var buf;
@@ -204,3 +205,17 @@ Meteor.methods({
 	}
 	
 });
+
+
+parseIncomingOsc = function(msg){
+
+		try{
+			
+			//do stuff to parse here
+		
+			return console.log(msg);
+		}catch(err){
+			console.log('invalid incoming OSC message');
+		}
+
+}
