@@ -1,0 +1,24 @@
+<template name = "gameMain">
+
+	<div class="container">
+		<h1>{{currentUser.username}} Logged In</h1>	
+
+		{{#if isTextDisplay}}
+			{{>textDisplay}}
+		{{/if}}
+
+		{{#if isXyDisplay}}
+			{{>xyDisplay}}
+		{{/if}}
+
+	</div>
+
+</template>
+
+<template name= "textDisplay">
+	<H2>A Text Display</H2>
+</template>
+
+<template name= "control1">
+	<H2>An XY Display</H2>
+</template>

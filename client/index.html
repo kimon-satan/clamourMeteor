@@ -27,16 +27,35 @@
 
 <body>
 	
-{{#if isClamourReady}}
-
-	{{#unless currentUser}}
-	  {{> login_hello}}
+	{{#unless isAdmin}}
+		{{>userHead}}
 	{{/unless}}
-	
-	{{#if currentUser}}
-		<h1>Logged In</h1>
+
+	{{#if isAdmin}}
+		{{>admin}}
 	{{/if}}
 	
-{{/if}}
-
+	{{#if isWaiting}}
+		{{>waitSplash}}
+	{{/if}}
+	
 </body>
+
+<template name = "userHead">
+	{{#unless currentUser}}
+		{{> login_hello}}
+	{{/unless}}
+
+	{{#if currentUser}}
+		{{> gameMain}}
+	{{/if}}
+</template>
+
+<template name="waitSplash">
+	<div class="container">
+		<p>waiting</p>
+		<div id = "overlay">
+			<img src="bigwheel.gif" id="bigwheel"></img>
+		</div>
+	</div>
+</template>

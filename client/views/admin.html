@@ -1,0 +1,70 @@
+<template name="admin">
+	<div class="container">
+		{{#unless currentUser}}
+			{{>admin_login}}
+		{{/unless}}
+
+		{{#if currentUser}}
+	
+			{{#if isAdminPriv}}
+				<H1>Admin Page</H1>
+				{{> admin_playerTable}}
+			{{/if}}
+	
+			{{#unless isAdminPriv}}
+				<H1>You don't have permission to view this page !</H1>
+			{{/unless}}
+	
+		{{/if}}
+	</div>
+</template>
+
+<template name ="admin_login">
+	
+	<H1>Clamour</H1>
+	<H2>Admin Login</H2>
+	
+	username<br/>
+	<input class="login" id="admin_un"></input><br/>
+	password<br/>
+	<input type = "password" class="login" id="admin_pw"></input>
+	<br/>
+	<button class="login">submit</button>
+</template>
+
+
+<template name ="admin_playerTable">
+
+	<div id="table-wrapper">
+	  <div id="table-scroll">
+		<table>
+			<thead>
+				<tr>
+					<th>username</th>
+					<th>_id</th>
+					<th>devId</th>
+					<th>isActive</th>
+					<th>prev checkin</th>
+				</tr>
+			</thead>
+				<tbody>
+			{{#each players}}
+				{{>admin_player}}
+			{{/each}}
+				</tbody>
+		</table>
+	  </div>
+	</div>
+
+</template>
+
+
+<template name = "admin_player">
+	<tr>
+		<td>{{username}}</td>
+		<td>{{_id}}</td>
+		<td>{{profile.devId}}</td>
+		<td>{{profile.isActive}}</td>
+		<td>{{profile.prevTS}}</td>
+	</tr>
+</template>
