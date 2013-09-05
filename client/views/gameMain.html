@@ -10,6 +10,10 @@
 		{{#if isXyDisplay}}
 			{{>xyDisplay}}
 		{{/if}}
+		
+		{{#if isButtonDisplay}}
+			{{>buttonDisplay}}
+		{{/if}}
 
 	</div>
 
@@ -17,8 +21,13 @@
 
 <template name= "textDisplay">
 	<H2>A Text Display</H2>
+	<H3>{{displayText}}</H3>
 </template>
 
-<template name= "control1">
-	<H2>An XY Display</H2>
+<template name= "xyDisplay">
+	{{>XYPad}}
+</template>
+
+<template name= "buttonDisplay">
+	<H2>A Button Display</H2>
 </template>

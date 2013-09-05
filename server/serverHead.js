@@ -11,7 +11,7 @@ getAuth = function(user){
 }
 
 //osc variables
-var osc, dgram, udp, outport, inport, sock;
+var osc, dgram, udp, outport, inport, sock, nodes;
 
 Meteor.publish('clamourData', function(){ return clamourData.find({}); });
 Meteor.publish('SUsers', function(user){ 
@@ -30,7 +30,7 @@ Meteor.publish('allPlayers', function(user){
 	}
 });
 
-Meteor.publish('userData', function(){ return userData.find({})});
+Meteor.publish('userData', function(){ return UserData.find({});});
 
 Meteor.startup(function(){
 
@@ -53,14 +53,15 @@ Meteor.startup(function(){
 	outport = 41234;
 	inport = 42345;
 	
-	sock = dgram.createSocket('udp4', function(msg, rinfo) {
+	//wraps the socket in Meteor 
 	
+	var boundReceiver = Meteor.bindEnvironment(function(msg, rinfo) {
 		
 		parseIncomingOsc(osc.fromBuffer(msg));
-		
-			
 	
-	});
+	},function(e){ throw e});
+	
+	sock = dgram.createSocket('udp4', boundReceiver);
 	
 	sock.bind(inport);
 	
@@ -91,6 +92,18 @@ Meteor.startup(function(){
 	
 	}, tsInterval);
 	
+	nodes = {};
+	
+	for(var s = 0; s < numSeats; s++){
+			for(var r = 0; r < numRows; r++){
+			
+			var name = String.fromCharCode(r + 65) + "_" + String(s + 1);
+			nodes[name] = {isOn: false, isFlagged: false, prevMsg: null};	
+			
+		}
+	}
+	
+	
 
 });
 
@@ -112,7 +125,7 @@ Meteor.methods({
 			//repopulate users
 			
 			Meteor.users.remove({_id: {$ne: user._id}}); // remove everyone except admin
-			userData.remove({});
+			UserData.remove({});
 		
 			for(var s = 0; s < numSeats; s++){
 				for(var r = 0; r < numRows; r++){
@@ -125,7 +138,7 @@ Meteor.methods({
 										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat},	
 										});
 										
-					userData.insert({id: id, currentRow: row, currentSeat: seat, displayType: 0});
+					UserData.insert({id: id, currentRow: row, currentSeat: seat, displayType: 0});
 				
 				}
 			}
@@ -165,40 +178,106 @@ Meteor.methods({
 							);
 	
 	},
-
 	
-
-	start: function() {
+	
+	sendNodeOn: function(row, seat, ts, x, y) {
   
 	  var buf;
-	  console.log("sending message ...");
-
+	  var index = row + '_' + seat;
+	  
 	  buf = osc.toBuffer({
-				address: "/start",
+		address: "/node/on",
+		args: [row, seat]
 	  });
-  
-	  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  
+	  //delayed message handling
+	 console.log("nodeOn: " + index + " ts: " + ts)
+	 
+	  if(!nodes[index].isOn){
+	  	 //actually an extra case for unresolved offs is needed
+	  	 nodes[index].isOn = true;
+	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	  }else{
+	  	
+	  	if(nodes[index].isFlagged){
+	  	
+	  		if(nodes[index].prevMsg.ts < ts){
+	  			//prevMsg is older
+	  			return udp.send(buf, 0, buf.length, outport, "localhost");
+	  		}else{
+	  			//prevMsg is younger
+	  			//resolve
+	  			nodes[index].isFlagged = false;
+	  			nodes[index].prevMsg = null;
+	  		}
+	  		
+	  	}else{
+	  	
+	  		//flag n store
+	  		nodes[index].isFlagged = true;
+	  		nodes[index].prevMsg = {msg: 'on', ts: ts}; //replace with client TS
+	  		
+	  	}
+	  
+	  }
+	  
+	  return true;
+	  
+
 	},
 	
-	stop: function() {
+	sendNodeOff: function(row, seat, ts, x, y) {
   
 	  var buf;
-	  console.log("sending message ...");
-
+	  var index = row + '_' + seat;
+	  
 	  buf = osc.toBuffer({
-				address: "/stop",
+				address: "/node/off",
+				args: [row, seat]
 	  });
   
-	  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  
+	  //delayed message handling
+	  console.log("nodeOff: " + index + " ts: " + ts);
+	 
+	  if(nodes[index].isOn){
+	  	 //actually an extra case for unresolved ons is needed
+	  	 nodes[index].isOn = false;
+	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	  }else{
+	  	
+	  	if(nodes[index].isFlagged){
+	  	
+	  		if(nodes[index].prevMsg.ts < ts){
+	  			//prevMsg is older
+	  			//resolve
+	  			nodes[index].isFlagged = false;
+	  			nodes[index].prevMsg = null;
+	  		
+	  		}else{
+	  			//prevMsg is younger
+	  			return udp.send(buf, 0, buf.length, outport, "localhost");
+	  		}
+	  		
+	  	}else{
+	  	
+	  		//flag n store
+	  		nodes[index].isFlagged = true;
+	  		nodes[index].prevMsg = {msg: 'off', ts: ts}; //replace with client TS
+	  		
+	  	}
+	  
+	  }
+	  
 	},
 	
-	sendCoordinate: function(x, y) {
+	updateNode: function(row, seat, x, y) {
   
 	  var buf;
 
 	  buf = osc.toBuffer({
-				address: "/mouse/position",
-				args: [x,y]
+				address: "/node/position",
+				args: [row, seat, x,y]
 	  });
   
 	  return udp.send(buf, 0, buf.length, outport, "localhost");
@@ -207,15 +286,36 @@ Meteor.methods({
 });
 
 
-parseIncomingOsc = function(msg){
 
-		try{
-			
-			//do stuff to parse here
+parseIncomingOsc = function(msg){
 		
-			return console.log(msg);
-		}catch(err){
-			console.log('invalid incoming OSC message');
+	
+	//parse the address
+	var add_str = msg.elements[0].address.substr(1);
+	var add_array = add_str.split('/');
+	var arg_array = msg.elements[0].args;
+	
+	if(add_array[0] == 'allClients'){
+	
+		if(add_array[1] == 'newControl'){
+			
+			var nc_index = arg_array[0].value;
+			
+			
+			if(nc_index == 0){
+				//var nc_text =  ;
+				UserData.update({}, {$set: {displayType: nc_index, displayText: arg_array[1].value}}, {multi: true});
+			}else{
+				UserData.update({}, {$set: {displayType: nc_index}}, {multi: true});
+			}
+			
+			console.log('all clients to display: ' + nc_index);
 		}
+	}
+	
+	
+	
+	
 
 }
+

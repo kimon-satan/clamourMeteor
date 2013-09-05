@@ -1,15 +1,7 @@
-<!-- -------- old crap ---------------- -->
-
-<template name="hello">
-	<h1>METEOR 2 OSC</h1>
-	<input type="button" class="on" value="Sound On" />
-	<input type="button" class="off" value="Sound Off" />
-	<br/><br/>
-	{{>coordbox}}
-	<div id="container"></div>
+<template name="XYPad">
+	{{#constant}}
+	<div id="canvasDiv" class="canavasDiv"></div>
+	{{/constant}}
 </template>
 
 
-<template name="coordbox">
-	<div>{{coordinates}}</div>
-</template>

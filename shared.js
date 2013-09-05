@@ -7,5 +7,5 @@ numRows = 10;
 
 clamourData = new Meteor.Collection('clamourData');
 SUsers = new Meteor.Collection('SUsers');
-userData = new Meteor.Collection('userData');
+UserData = new Meteor.Collection('userData');
 
