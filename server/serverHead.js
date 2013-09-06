@@ -98,7 +98,7 @@ Meteor.startup(function(){
 			for(var r = 0; r < numRows; r++){
 			
 			var name = String.fromCharCode(r + 65) + "_" + String(s + 1);
-			nodes[name] = {isOn: false, isFlagged: false, prevMsg: null};	
+			nodes[name] = {uname: name, isOn: false, isFlagged: false, prevMsg: null, flagMsg: null};	
 			
 		}
 	}
@@ -138,7 +138,7 @@ Meteor.methods({
 										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat},	
 										});
 										
-					UserData.insert({id: id, currentRow: row, currentSeat: seat, displayType: 0});
+					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: 0});
 				
 				}
 			}
@@ -187,41 +187,56 @@ Meteor.methods({
 	  
 	  buf = osc.toBuffer({
 		address: "/node/on",
-		args: [row, seat]
+		args: [row, seat, x, y]
 	  });
+	  
+	  //ignore repeat messages
+	  try{
+	  	if(nodes[index].prevMsg.ts >= ts)return true;
+	  }catch(e){
+	  	console.log('no prev message stored');
+	  }
 	  
 	  //delayed message handling
 	 console.log("nodeOn: " + index + " ts: " + ts)
+	 nodes[index].prevMsg = {msg: 'on', ts: ts};
+	
+	 nodes[index].isOn = true;
+	 return udp.send(buf, 0, buf.length, outport, "localhost");
 	 
-	  if(!nodes[index].isOn){
+	 //this logic shouldn't be necessary as all messages should get through eventually
+	 
+	/*  if(!nodes[index].isOn){
 	  	 //actually an extra case for unresolved offs is needed
 	  	 nodes[index].isOn = true;
 	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	  	 
 	  }else{
 	  	
 	  	if(nodes[index].isFlagged){
 	  	
-	  		if(nodes[index].prevMsg.ts < ts){
-	  			//prevMsg is older
+	  		if(nodes[index].flagMsg.ts < ts){
+	  			//flagMsg is older
 	  			return udp.send(buf, 0, buf.length, outport, "localhost");
 	  		}else{
-	  			//prevMsg is younger
+	  			//flagMsg is younger
 	  			//resolve
 	  			nodes[index].isFlagged = false;
-	  			nodes[index].prevMsg = null;
+	  			nodes[index].flagMsg = null;
 	  		}
 	  		
 	  	}else{
-	  	
-	  		//flag n store
-	  		nodes[index].isFlagged = true;
-	  		nodes[index].prevMsg = {msg: 'on', ts: ts}; //replace with client TS
+	  		 		
+			//flag n store
+			nodes[index].isFlagged = true;
+			nodes[index].flagMsg = {msg: 'on', ts: ts}; //replace with client TS
+	  		
 	  		
 	  	}
 	  
 	  }
 	  
-	  return true;
+	  return true;*/
 	  
 
 	},
@@ -235,27 +250,41 @@ Meteor.methods({
 				address: "/node/off",
 				args: [row, seat]
 	  });
-  
 	  
-	  //delayed message handling
+  	  //ignore repeat & delayed messages
+  	  try{
+	  	if(nodes[index].prevMsg.ts >= ts)return true; //ignore all old messages
+	  }catch(e){
+	  	console.log('no prev msg stored');
+	  }
+	  
+	
+	  nodes[index].prevMsg = {msg: 'off', ts: ts};
 	  console.log("nodeOff: " + index + " ts: " + ts);
+	  
+	  nodes[index].isOn = false;
+	  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  
 	 
+	 /*
 	  if(nodes[index].isOn){
+	  
 	  	 //actually an extra case for unresolved ons is needed
 	  	 nodes[index].isOn = false;
 	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	  	 
 	  }else{
 	  	
 	  	if(nodes[index].isFlagged){
 	  	
-	  		if(nodes[index].prevMsg.ts < ts){
+	  		if(nodes[index].flagMsg.ts < ts){
 	  			//prevMsg is older
 	  			//resolve
 	  			nodes[index].isFlagged = false;
-	  			nodes[index].prevMsg = null;
+	  			nodes[index].flagMsg = null;
 	  		
 	  		}else{
-	  			//prevMsg is younger
+	  			//flagMsg is younger
 	  			return udp.send(buf, 0, buf.length, outport, "localhost");
 	  		}
 	  		
@@ -263,11 +292,11 @@ Meteor.methods({
 	  	
 	  		//flag n store
 	  		nodes[index].isFlagged = true;
-	  		nodes[index].prevMsg = {msg: 'off', ts: ts}; //replace with client TS
+	  		nodes[index].flagMsg = {msg: 'off', ts: ts}; //replace with client TS
 	  		
 	  	}
 	  
-	  }
+	  }*/
 	  
 	},
 	
@@ -301,9 +330,21 @@ parseIncomingOsc = function(msg){
 			
 			var nc_index = arg_array[0].value;
 			
+			var d = new Date();
 			
+			UserData.find({}).forEach(function(user){
+				
+				if(user.displayType != nc_index){
+					
+					nodes[user.uname].isOn = false;
+					//to stop rogue messages
+					nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
+					
+				}
+				
+			});
+						
 			if(nc_index == 0){
-				//var nc_text =  ;
 				UserData.update({}, {$set: {displayType: nc_index, displayText: arg_array[1].value}}, {multi: true});
 			}else{
 				UserData.update({}, {$set: {displayType: nc_index}}, {multi: true});
@@ -318,4 +359,7 @@ parseIncomingOsc = function(msg){
 	
 
 }
+
+
+
 

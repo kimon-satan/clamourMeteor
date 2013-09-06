@@ -2,94 +2,138 @@ var x = 0, y = 0;
 
 var setupKinetic = function(){
 
-	var stage, shapesLayer, sendOn, sendOff, isDown = false;
+	var stage, shapeLayer, sendOn, sendOff, isDown = false;
 	
 	stage = new Kinetic.Stage({
 	
 		container: 'canvasDiv',
-		width: 900,
-		height: 600
+		width: 640 ,
+		height: 480 
 		
 	});
+	
 
-	rectLayer = new Kinetic.Layer();
+	shapeLayer = new Kinetic.Layer();
+	
 	
 	var mRect = new Kinetic.Rect({
-		x: 20,
-		y: 20,
-		width: stage.getWidth() - 40,
-		height: stage.getHeight() -40,
+		x: 0,
+		y: 0,
+		width: stage.getWidth(),
+		height: stage.getHeight(),
 		fill: 'white',
 		stroke: 'black',
 		strokeWidth: 2
+		
+	 });
+	 
+	 var mCircle = new Kinetic.Circle({
+	 	x: stage.getWidth() /2,
+	 	y: stage.getHeight() /2,
+	 	fill: 'none',
+	 	radius: 80,
+	 	draggable: true
 	 });
 	
-	mRect.on('mousedown touchstart', function() {
+	
+	var startGesture = function(x, y){
+	
+		mRect.setFill('grey');
+		mCircle.setFill('red');
 		
+		stage.draw();
+		
+		isDown = true;
+	
+		var r = Meteor.user().profile.row;
+		var s = parseInt(Meteor.user().profile.seat);
+		var d = new Date();
+		
+		sendOn = setInterval(function(){
+			
+			Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, function(err, res){
+				clearInterval(sendOn);
+			});
+		},100);
+		
+		
+	};
+	
+	
+	mRect.on('mousedown',function(){
+	
 		if(!isDown){
-			this.setFill('grey');
-			var r = Meteor.user().profile.row;
-			var s = Meteor.user().profile.seat;
-			sendOn = setInterval(function(){
-				var d = new Date();
-				Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, function(err, res){
-					clearInterval(sendOn);
-				});
-			},100);
-			isDown = true;
-			rectLayer.draw();
+		
+			var mousePos = stage.getMousePosition();
+			mCircle.setX(mousePos.x);
+			mCircle.setY(mousePos.y);
+			shapeLayer.add(mCircle);
+			startGesture(mousePos.x, mousePos.y);
+			
+			mCircle.fire('mousedown');
+		
 		}
 		
 	});
 	
-	mRect.on('mouseup touchend mouseout touchout', function() {
+	mRect.on('touchstart',function(){
+	
+		if(!isDown){
+		
+			var touchPos = stage.getTouchPosition();
+			mCircle.setX(touchPos.x);
+			mCircle.setY(touchPos.y);
+			shapeLayer.add(mCircle);
+			
+			startGesture(touchPos.x, touchPos.y);
+			
+			mCircle.fire('mousedown'); //check this works
+		}
+		
+	});
+	
+	mCircle.on('dragmove', function(){
+	
+		if(isDown){
+			var mousePos = mCircle.getPosition();
+			x = mousePos.x;
+			y = mousePos.y;
+			mCircle.setX(x);
+			mCircle.setY(y);
+			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), x , y);
+			
+		
+		}
+	});
+	
+	
+	mCircle.on('dragend mouseup touchend',function(){
 		
 		if(isDown){
-			this.setFill('white');
+			mRect.setFill('white');
+			mCircle.setFill('none');
 			var r = Meteor.user().profile.row;
-			var s = Meteor.user().profile.seat;
+			var s = parseInt(Meteor.user().profile.seat);
+			var d = new Date();
+			
 			sendOff = setInterval(function(){
-				var d = new Date();
+				
 				Meteor.call('sendNodeOff', r, s, d.getTime(), x, y, function(){
 					clearInterval(sendOff);
 				});
 			},100);
 			isDown = false;
-			rectLayer.draw();
+			mCircle.remove();
+			stage.draw();
 		}
+		
 		
 	});
 	
 	
-	mRect.on('mousemove', function() {
-		
-		if(isDown){
-			var mousePos = stage.getMousePosition();
-			x = mousePos.x;
-			y = mousePos.y;
-			Meteor.call('updateNode', Meteor.user().row, Meteor.user().seat,  x ,y);
-		}
-		
+	shapeLayer.add(mRect);
+	stage.add(shapeLayer);
 
-	});
-	
-	mRect.on('touchmove', function() {
-	
-		if(isDown){
-			var touchPos = stage.getMousePosition();
-			x = touchPos.x;
-			y = touchPos.y;
-			Meteor.call('updateNode', Meteor.user().row, Meteor.user().seat,  x ,y);
-		}
-		
-	});
-
-
-	
-	rectLayer.add(mRect);
-	
-
-	stage.add(rectLayer);
    
 
 };
