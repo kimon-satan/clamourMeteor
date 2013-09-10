@@ -58,6 +58,7 @@ Meteor.startup(function(){
 	var boundReceiver = Meteor.bindEnvironment(function(msg, rinfo) {
 		
 		parseIncomingOsc(osc.fromBuffer(msg));
+			
 	
 	},function(e){ throw e});
 	
@@ -169,6 +170,7 @@ Meteor.methods({
 	},
 
 	timeStamp: function(user, devId){
+	
 		var d = new Date();
 		Meteor.users.update(user._id, {$set: {'profile.devId' : devId, 
 											'profile.isActive': true, 
@@ -176,6 +178,7 @@ Meteor.methods({
 											}
 									}
 							);
+		//console.log("TS: " + user.username)
 	
 	},
 	
@@ -198,11 +201,13 @@ Meteor.methods({
 	  }
 	  
 	  //delayed message handling
-	 console.log("nodeOn: " + index + " ts: " + ts)
 	 nodes[index].prevMsg = {msg: 'on', ts: ts};
 	
-	 nodes[index].isOn = true;
-	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	if(!nodes[index].isOn){
+		console.log("nodeOn: " + index + " ts: " + ts)
+	 	nodes[index].isOn = true;
+	 	return udp.send(buf, 0, buf.length, outport, "localhost");
+	 }
 	 
 	 //this logic shouldn't be necessary as all messages should get through eventually
 	 
@@ -258,12 +263,13 @@ Meteor.methods({
 	  	console.log('no prev msg stored');
 	  }
 	  
-	
 	  nodes[index].prevMsg = {msg: 'off', ts: ts};
-	  console.log("nodeOff: " + index + " ts: " + ts);
 	  
-	  nodes[index].isOn = false;
-	  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  if(nodes[index].isOn){
+		  console.log("nodeOff: " + index + " ts: " + ts);
+		  nodes[index].isOn = false;
+		  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  }
 	  
 	 
 	 /*
@@ -317,41 +323,83 @@ Meteor.methods({
 
 
 parseIncomingOsc = function(msg){
-		
+	
 	
 	//parse the address
-	var add_str = msg.elements[0].address.substr(1);
-	var add_array = add_str.split('/');
-	var arg_array = msg.elements[0].args;
+	for(var i = 0; i < msg.elements.length; i++){
 	
-	if(add_array[0] == 'allClients'){
+		var add_str = msg.elements[i].address.substr(1);
+		var add_array = add_str.split('/');
+		var arg_array = msg.elements[i].args;
 	
-		if(add_array[1] == 'newControl'){
+		if(add_array[0] == 'allClients'){
+	
+				if(add_array[1] == 'newControl'){
 			
-			var nc_index = arg_array[0].value;
+					var nc_index = arg_array[0].value;
+			
+					var d = new Date();
+			
+					UserData.find({}).forEach(function(user){
+				
+						if(user.displayType != nc_index){
+					
+							nodes[user.uname].isOn = false;
+							//to stop rogue messages
+							nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
+					
+						}
+				
+					});
+						
+					if(nc_index == 0){
+						UserData.update({}, {$set: {displayType: nc_index, displayText: arg_array[1].value}}, {multi: true});
+					}else{
+						UserData.update({}, {$set: {displayType: nc_index}}, {multi: true});
+					}
+			
+					console.log('all clients to display: ' + nc_index);
+				}
+				
+		}else if(add_array[0] == 'newControl'){
+			
+			
+			var un = arg_array[0].value;
+			
+			console.log("nc: " + un);
+			var nc_index = arg_array[1].value;
 			
 			var d = new Date();
 			
-			UserData.find({}).forEach(function(user){
-				
-				if(user.displayType != nc_index){
+			var user = UserData.findOne({uname: un});
+			
+			if(user.displayType != nc_index){
 					
-					nodes[user.uname].isOn = false;
-					//to stop rogue messages
-					nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
+				nodes[user.uname].isOn = false;
+				//to stop rogue messages
+				nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
 					
-				}
-				
-			});
-						
-			if(nc_index == 0){
-				UserData.update({}, {$set: {displayType: nc_index, displayText: arg_array[1].value}}, {multi: true});
-			}else{
-				UserData.update({}, {$set: {displayType: nc_index}}, {multi: true});
 			}
 			
-			console.log('all clients to display: ' + nc_index);
+			if(nc_index == 0){
+				UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: ""}});
+			}else{
+				UserData.update({uname: un}, {$set: {displayType: nc_index}});
+			}
+			
+			
+		}else if(add_array[0] == 'newText'){
+			
+			var un = arg_array[0].value;
+			var text = arg_array[1].value;
+			
+			console.log("tx:" + un);
+			
+			UserData.update({uname: un}, {$set: {displayText: text}});
+			
+			
 		}
+			
 	}
 	
 	

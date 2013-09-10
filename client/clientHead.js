@@ -21,10 +21,13 @@ Handlebars.registerHelper('isAdmin', function(){return Session.get('isAdmin')});
 Handlebars.registerHelper('isWaiting', function(){return Session.get('isWaiting')});
 
 Template.userHead.created = function(){
-		
-	setTimeout(function(){
-		if(Meteor.user())Meteor.call('setupSession');
-	}, 200);
+	
+	var startSession = setInterval(function(){
+		if(Meteor.user()){
+			clearInterval(startSession);
+			Meteor.call('setupSession');
+		}
+	}, 500);
 	
 	
 }

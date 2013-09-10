@@ -68,7 +68,7 @@ var setupKinetic = function(){
 			mCircle.setX(mousePos.x);
 			mCircle.setY(mousePos.y);
 			shapeLayer.add(mCircle);
-			startGesture(mousePos.x, mousePos.y);
+			startGesture(mousePos.x/stage.getWidth(), mousePos.y/stage.getHeight());
 			
 			mCircle.fire('mousedown');
 		
@@ -85,7 +85,7 @@ var setupKinetic = function(){
 			mCircle.setY(touchPos.y);
 			shapeLayer.add(mCircle);
 			
-			startGesture(touchPos.x, touchPos.y);
+			startGesture(touchPos.x/stage.getWidth(), touchPos.y/stage.getHeight());
 			
 			mCircle.fire('mousedown'); //check this works
 		}
@@ -100,7 +100,9 @@ var setupKinetic = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), x , y);
+			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+			x/stage.getWidth() , 
+			y/stage.getHeight());
 			
 		
 		}
@@ -118,7 +120,7 @@ var setupKinetic = function(){
 			
 			sendOff = setInterval(function(){
 				
-				Meteor.call('sendNodeOff', r, s, d.getTime(), x, y, function(){
+				Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
 					clearInterval(sendOff);
 				});
 			},100);
