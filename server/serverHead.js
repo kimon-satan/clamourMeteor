@@ -323,7 +323,7 @@ Meteor.methods({
 
 
 parseIncomingOsc = function(msg){
-	
+
 	
 	//parse the address
 	for(var i = 0; i < msg.elements.length; i++){
@@ -366,7 +366,6 @@ parseIncomingOsc = function(msg){
 			
 			var un = arg_array[0].value;
 			
-			console.log("nc: " + un);
 			var nc_index = arg_array[1].value;
 			
 			var d = new Date();
@@ -392,8 +391,6 @@ parseIncomingOsc = function(msg){
 			
 			var un = arg_array[0].value;
 			var text = arg_array[1].value;
-			
-			console.log("tx:" + un);
 			
 			UserData.update({uname: un}, {$set: {displayText: text}});
 			
