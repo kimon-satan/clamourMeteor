@@ -5,7 +5,10 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 200;
     margin: 0px 0px;
-    background: white;
+    width: 480px;
+	height: 320px;
+ 	 background: white;
+ 	 text-align: center;
     padding: 0;
     -webkit-user-select: none;
     -khtml-user-select: none;
@@ -15,15 +18,29 @@ body {
 }
 
 
-.container{
+#outer{
 	
+	position: relative;
+	width: 480px;
+	height: 320px;
 	text-align: center;
-	width: 960px;
-	height: 640px;
-	margin 10px;
 
 }
 
+.container{
+	
+	text-align: center;
+	background: white;
+
+}
+
+.innerContainer{
+	
+	margin: 50px;
+	text-align: center;
+	background: white;
+
+}
 
 
 .login {
@@ -33,15 +50,22 @@ body {
 	margin: 10px 0;
 }
 
+h1{
+	font-size: 40pt;
+}
+
+h2{
+	font-size: 25pt;
+}
 
 
 /*----individual items -------*/
 
 #bigwheel {
 	position: relative;
-	margin: 200px auto auto auto;
-	width: 200px;
-	height: 200px;
+	margin: 60px auto auto auto;
+	width: 100px;
+	height: 100px;
 }
 
 #overlay, #overlay_gray{

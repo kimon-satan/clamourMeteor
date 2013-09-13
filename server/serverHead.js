@@ -93,6 +93,27 @@ Meteor.startup(function(){
 	
 	}, tsInterval);
 	
+	Meteor.setInterval(function(){
+	
+		var buf, onLineUsers = new Array(), count = 0;
+		
+		Meteor.users.find({'profile.isActive':true}).forEach(function(user){
+		
+			onLineUsers[count] = user.username;
+			count += 1;
+			
+		});
+		
+		buf = osc.toBuffer({
+			address: "/update/onlineUsers",
+			args: onLineUsers
+		});
+		
+		udp.send(buf, 0, buf.length, outport, "localhost");
+		
+	
+	},10000);
+	
 	nodes = {};
 	
 	for(var s = 0; s < numSeats; s++){
@@ -139,7 +160,7 @@ Meteor.methods({
 										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat},	
 										});
 										
-					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: 0});
+					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: "BIG_TEXT"});
 				
 				}
 			}
@@ -380,17 +401,24 @@ parseIncomingOsc = function(msg){
 					
 			}
 			
-			if(nc_index == 0){
-				UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: ""}});
-			}else{
+			if(nc_index == "BIG_TEXT" || nc_index == "SMALL_TEXT"){
+				if(arg_array.length == 3){
+					UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: arg_array[2].value}});
+				}else{
+					UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: ""}});
+				}
+			}else if(nc_index == "XY"){
 				UserData.update({uname: un}, {$set: {displayType: nc_index}});
 			}
 			
 			
 		}else if(add_array[0] == 'newText'){
 			
+			
 			var un = arg_array[0].value;
 			var text = arg_array[1].value;
+			
+			//console.log(text);
 			
 			UserData.update({uname: un}, {$set: {displayText: text}});
 			

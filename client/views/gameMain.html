@@ -1,10 +1,14 @@
 <template name = "gameMain">
 
 	<div class="container">
-		<h1>{{currentUser.username}} Logged In</h1>	
+		<I>logged in for seat {{currentUser.username}}</I>	
 
-		{{#if isTextDisplay}}
-			{{>textDisplay}}
+		{{#if isSmallTextDisplay}}
+			{{>smallTextDisplay}}
+		{{/if}}
+		
+		{{#if isBigTextDisplay}}
+			{{>bigTextDisplay}}
 		{{/if}}
 
 		{{#if isXyDisplay}}
@@ -19,9 +23,16 @@
 
 </template>
 
-<template name= "textDisplay">
-	<H2>A Text Display</H2>
-	<H3>{{displayText}}</H3>
+<template name= "bigTextDisplay">
+	<div class= "innerContainer">
+		<H1>{{displayText}}</H1>
+	</div>
+</template>
+
+<template name= "smallTextDisplay">
+	<div class= "innerContainer">
+		<H2>{{displayText}}</H2>
+	</div>
 </template>
 
 <template name= "xyDisplay">

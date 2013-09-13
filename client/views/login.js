@@ -21,6 +21,8 @@ Template.login_hello.seatNumbers = function(){
 Template.login_hello.events({
 
 	'click button':function(){
+		
+		Session.set('isWaiting', true);
 				
 		var tc = $('#loginTC').val()
 		, sr = $('#loginSR').val()
@@ -28,7 +30,6 @@ Template.login_hello.events({
 		
 		var username = sr + "_" + String(sn);
 			
-		Session.set('isWaiting', true);
 		
 		Meteor.call('checkPlayerFree', username, devId, function(err, res){
 			

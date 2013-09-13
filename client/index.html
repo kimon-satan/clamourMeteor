@@ -7,17 +7,14 @@
 			if( /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent) ) {
 			 //get proper width
 			  var ww = ( $(window).width() < window.screen.width ) ? $(window).width() : window.screen.width; 
+			  var wh = ( $(window).height() < window.screen.height ) ? $(window).height() : window.screen.height; 
 			 // min width of site
 			  var mw = 480; 
 			   //calculate ratio
-			  var ratio =  ww / mw;
-			  //smaller than minimum size
-			  if( ww < mw){ 
-			   $('#Viewport').attr('content', 'initial-scale=' + ratio + ', maximum-scale=' + ratio + ', minimum-scale=' + ratio + ', user-scalable=yes, width=' + ww);
-			  }else{ 
-			  //regular size
-			   $('#Viewport').attr('content', 'initial-scale=1.0, maximum-scale=2, minimum-scale=1.0, user-scalable=yes, width=' + ww);
-			  }
+			  var ratio =  wh / mw;
+			
+			  $('#Viewport').attr('content', 'initial-scale=' + ratio + ', maximum-scale=' + ratio + ', minimum-scale=' + ratio + ', user-scalable=no, width=' + ww);
+			  
 			}
 		});
 	</script>
@@ -26,7 +23,7 @@
 </head>
 
 <body>
-	
+	<div id = "outer">
 	{{#unless isAdmin}}
 		{{>userHead}}
 	{{/unless}}
@@ -38,7 +35,7 @@
 	{{#if isWaiting}}
 		{{>waitSplash}}
 	{{/if}}
-	
+	</div>
 </body>
 
 <template name = "userHead">
@@ -53,7 +50,6 @@
 
 <template name="waitSplash">
 	<div class="container">
-		<p>waiting</p>
 		<div id = "overlay">
 			<img src="bigwheel.gif" id="bigwheel"></img>
 		</div>
