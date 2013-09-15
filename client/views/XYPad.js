@@ -7,8 +7,8 @@ var setupKinetic = function(){
 	stage = new Kinetic.Stage({
 	
 		container: 'canvasDiv',
-		width: 640 ,
-		height: 480 
+		width: 400 ,
+		height:  225
 		
 	});
 	
@@ -21,7 +21,7 @@ var setupKinetic = function(){
 		y: 0,
 		width: stage.getWidth(),
 		height: stage.getHeight(),
-		fill: 'white',
+		fill: 'none',
 		stroke: 'black',
 		strokeWidth: 2
 		
@@ -112,7 +112,7 @@ var setupKinetic = function(){
 	mCircle.on('dragend mouseup touchend',function(){
 		
 		if(isDown){
-			mRect.setFill('white');
+			mRect.setFill('none');
 			mCircle.setFill('none');
 			var r = Meteor.user().profile.row;
 			var s = parseInt(Meteor.user().profile.seat);
@@ -141,7 +141,6 @@ var setupKinetic = function(){
 };
 
 var boundFunction = Meteor.bindEnvironment(setupKinetic, function(e){throw e});
-
 
 Template.XYPad.created = function(){
 	

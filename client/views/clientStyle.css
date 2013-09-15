@@ -18,6 +18,12 @@ body {
 }
 
 
+#admin{
+
+	width: 800px;
+
+}
+
 #outer{
 	
 	position: relative;
@@ -58,6 +64,15 @@ h2{
 	font-size: 25pt;
 }
 
+.canvasContainer{
+	position: relative;
+	margin: 60px auto auto auto;
+}
+
+.padText{
+	position: relative;
+	margin: 100px auto;
+}
 
 /*----individual items -------*/
 

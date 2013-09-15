@@ -23,14 +23,17 @@
 </head>
 
 <body>
+	
+	<div id="admin">
+	{{#if isAdmin}}
+		{{>admin}}
+	{{/if}}
+	</div>
+
 	<div id = "outer">
 	{{#unless isAdmin}}
 		{{>userHead}}
 	{{/unless}}
-
-	{{#if isAdmin}}
-		{{>admin}}
-	{{/if}}
 	
 	{{#if isWaiting}}
 		{{>waitSplash}}
