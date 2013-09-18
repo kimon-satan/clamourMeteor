@@ -2,8 +2,8 @@
 
 //app globals
 tsInterval =  1000 * 10;
-numSeats = 10;
-numRows = 10;
+numSeats = 5;
+numRows = 2;
 
 clamourData = new Meteor.Collection('clamourData');
 SUsers = new Meteor.Collection('SUsers');

@@ -1,4 +1,21 @@
-<template name="XYPad">
+
+
+
+<template name ="XyOnOff">
+	<div class="padText">
+	<H1>Touch n Drag</H1>
+	</div>
+	{{#constant}}
+	<div id="overlay">
+		<div class="canvasContainer" >
+			<div id="canvasDiv" class="canavasDiv"></div>
+		</div>
+	</div>
+	{{/constant}}
+</template>
+
+
+<template name ="XyCont">
 	<div class="padText">
 	<H1>Drag</H1>
 	</div>
@@ -10,5 +27,4 @@
 	</div>
 	{{/constant}}
 </template>
-
 

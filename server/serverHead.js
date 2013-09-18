@@ -203,15 +203,64 @@ Meteor.methods({
 	
 	},
 	
+	sendStartDrag: function(row, seat, ts, x, y, type) {
+  
+	  var buf;
+	  var index = row + '_' + seat;
+	  
+	  buf = osc.toBuffer({
+		address: "/node/startDrag",
+		args: [row, seat, x, y, type]
+	  });
+	  
+	  //ignore repeat messages
+	  try{
+	  	if(nodes[index].prevMsg.ts >= ts)return true;
+	  }catch(e){
+	  	console.log('no prev message stored');
+	  }
+	  
+	  //delayed message handling
+	 nodes[index].prevMsg = {msg: 'startDrag', ts: ts};
+	console.log("startDrag: " + index + " ts: " + ts)
+	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	 
+
+	},
 	
-	sendNodeOn: function(row, seat, ts, x, y) {
+	sendDragOff: function(row, seat, ts) {
+  
+	  var buf;
+	  var index = row + '_' + seat;
+	  
+	  buf = osc.toBuffer({
+		address: "/node/endDrag",
+		args: [row, seat]
+	  });
+	  
+	  //ignore repeat messages
+	  try{
+	  	if(nodes[index].prevMsg.ts >= ts)return true;
+	  }catch(e){
+	  	console.log('no prev message stored');
+	  }
+	  
+	  //delayed message handling
+	 nodes[index].prevMsg = {msg: 'endDrag', ts: ts};
+	console.log("endDrag: " + index + " ts: " + ts)
+	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	 
+
+	},
+	
+	sendNodeOn: function(row, seat, ts, x, y, type) {
   
 	  var buf;
 	  var index = row + '_' + seat;
 	  
 	  buf = osc.toBuffer({
 		address: "/node/on",
-		args: [row, seat, x, y]
+		args: [row, seat, x, y, type]
 	  });
 	  
 	  //ignore repeat messages
@@ -230,40 +279,6 @@ Meteor.methods({
 	 	return udp.send(buf, 0, buf.length, outport, "localhost");
 	 }
 	 
-	 //this logic shouldn't be necessary as all messages should get through eventually
-	 
-	/*  if(!nodes[index].isOn){
-	  	 //actually an extra case for unresolved offs is needed
-	  	 nodes[index].isOn = true;
-	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
-	  	 
-	  }else{
-	  	
-	  	if(nodes[index].isFlagged){
-	  	
-	  		if(nodes[index].flagMsg.ts < ts){
-	  			//flagMsg is older
-	  			return udp.send(buf, 0, buf.length, outport, "localhost");
-	  		}else{
-	  			//flagMsg is younger
-	  			//resolve
-	  			nodes[index].isFlagged = false;
-	  			nodes[index].flagMsg = null;
-	  		}
-	  		
-	  	}else{
-	  		 		
-			//flag n store
-			nodes[index].isFlagged = true;
-			nodes[index].flagMsg = {msg: 'on', ts: ts}; //replace with client TS
-	  		
-	  		
-	  	}
-	  
-	  }
-	  
-	  return true;*/
-	  
 
 	},
 	
@@ -292,48 +307,16 @@ Meteor.methods({
 		  return udp.send(buf, 0, buf.length, outport, "localhost");
 	  }
 	  
-	 
-	 /*
-	  if(nodes[index].isOn){
-	  
-	  	 //actually an extra case for unresolved ons is needed
-	  	 nodes[index].isOn = false;
-	  	 return udp.send(buf, 0, buf.length, outport, "localhost");
-	  	 
-	  }else{
-	  	
-	  	if(nodes[index].isFlagged){
-	  	
-	  		if(nodes[index].flagMsg.ts < ts){
-	  			//prevMsg is older
-	  			//resolve
-	  			nodes[index].isFlagged = false;
-	  			nodes[index].flagMsg = null;
-	  		
-	  		}else{
-	  			//flagMsg is younger
-	  			return udp.send(buf, 0, buf.length, outport, "localhost");
-	  		}
-	  		
-	  	}else{
-	  	
-	  		//flag n store
-	  		nodes[index].isFlagged = true;
-	  		nodes[index].flagMsg = {msg: 'off', ts: ts}; //replace with client TS
-	  		
-	  	}
-	  
-	  }*/
 	  
 	},
 	
-	updateNode: function(row, seat, x, y) {
+	updateNode: function(row, seat, x, y, type) {
   
 	  var buf;
 
 	  buf = osc.toBuffer({
 				address: "/node/position",
-				args: [row, seat, x,y]
+				args: [row, seat, x,y, type]
 	  });
   
 	  return udp.send(buf, 0, buf.length, outport, "localhost");
@@ -397,7 +380,7 @@ parseIncomingOsc = function(msg){
 					
 				nodes[user.uname].isOn = false;
 				//to stop rogue messages
-				nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
+				//nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
 					
 			}
 			
@@ -407,9 +390,10 @@ parseIncomingOsc = function(msg){
 				}else{
 					UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: ""}});
 				}
-			}else if(nc_index == "XY"){
+			}else{
 				UserData.update({uname: un}, {$set: {displayType: nc_index}});
 			}
+			
 			
 			
 		}else if(add_array[0] == 'newText'){

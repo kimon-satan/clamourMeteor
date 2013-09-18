@@ -1,6 +1,6 @@
 var x = 0, y = 0;
 
-var setupKinetic = function(){
+var setupXyOnOff = function(){
 
 	var stage, shapeLayer, sendOn, sendOff, isDown = false;
 	
@@ -12,9 +12,7 @@ var setupKinetic = function(){
 		
 	});
 	
-
 	shapeLayer = new Kinetic.Layer();
-	
 	
 	var mRect = new Kinetic.Rect({
 		x: 0,
@@ -34,9 +32,10 @@ var setupKinetic = function(){
 	 	radius: 80,
 	 	draggable: true
 	 });
-	
+	 
 	
 	var startGesture = function(x, y){
+	
 	
 		mRect.setFill('grey');
 		mCircle.setFill('red');
@@ -51,7 +50,7 @@ var setupKinetic = function(){
 		
 		sendOn = setInterval(function(){
 			
-			Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, function(err, res){
+			Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, "xy",function(err, res){
 				clearInterval(sendOn);
 			});
 		},100);
@@ -102,7 +101,9 @@ var setupKinetic = function(){
 			mCircle.setY(y);
 			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
 			x/stage.getWidth() , 
-			y/stage.getHeight());
+			y/stage.getHeight(),
+			"xy"
+			);
 			
 		
 		}
@@ -110,6 +111,7 @@ var setupKinetic = function(){
 	
 	
 	mCircle.on('dragend mouseup touchend',function(){
+		
 		
 		if(isDown){
 			mRect.setFill('none');
@@ -132,7 +134,6 @@ var setupKinetic = function(){
 		
 	});
 	
-	
 	shapeLayer.add(mRect);
 	stage.add(shapeLayer);
 
@@ -140,23 +141,119 @@ var setupKinetic = function(){
 
 };
 
-var boundFunction = Meteor.bindEnvironment(setupKinetic, function(e){throw e});
+var setupXyCont = function(){
 
-Template.XYPad.created = function(){
+	var stage, shapeLayer;
 	
-	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
+	stage = new Kinetic.Stage({
+	
+		container: 'canvasDiv',
+		width: 400 ,
+		height:  225
+		
+	});
+	
+	shapeLayer = new Kinetic.Layer();
+	
+	var mRect = new Kinetic.Rect({
+		x: 0,
+		y: 0,
+		width: stage.getWidth(),
+		height: stage.getHeight(),
+		fill: 'grey',
+		stroke: 'black',
+		strokeWidth: 2
+		
+	 });
+	 
+	 var mCircle = new Kinetic.Circle({
+	 	x: stage.getWidth() /2,
+	 	y: stage.getHeight() /2,
+	 	fill: 'red',
+	 	radius: 80,
+	 	draggable: true
+	 });
+	 
+	
+	mCircle.on('dragmove', function(){
+	
+		
+		var mousePos = mCircle.getPosition();
+		x = mousePos.x;
+		y = mousePos.y;
+		mCircle.setX(x);
+		mCircle.setY(y);
+		Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+		x/stage.getWidth() , 
+		y/stage.getHeight(),
+		"xy");
+			
+		
+	});
+	
+		
+	shapeLayer.add(mRect);
+	shapeLayer.add(mCircle);
+	stage.add(shapeLayer);
 
-	   boundFunction();
+
+};
+
+var boundOnOff = Meteor.bindEnvironment(setupXyOnOff, function(e){throw e});
+var boundCont = Meteor.bindEnvironment(setupXyCont, function(e){throw e});
+
+Template.XyOnOff.created = function(){
+
+	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
+	
+	   boundOnOff();
 
 	});	
+	
+
+};
+
+Template.XyCont.created = function(){
+	
+	var r = Meteor.user().profile.row;
+	var s = parseInt(Meteor.user().profile.seat);
+	var d = new Date();
+	
+	var sendOn = setInterval(function(){
+		
+		Meteor.call('sendNodeOn', r , s , d.getTime(), 0.5, 0.5, "xy",function(err, res){
+			clearInterval(sendOn);
+		});
+	},100);
+		
+	
+
+	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
+	
+	   boundCont();
+
+	});	
+
+
+
+};
+
+Template.XyCont.destroyed = function(){
+
+	var r = Meteor.user().profile.row;
+	var s = parseInt(Meteor.user().profile.seat);
+	var d = new Date();
+	
+	var sendOff = setInterval(function(){
+		
+		Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
+			clearInterval(sendOff);
+		});
+	},100);
+
 
 };
 
 
 
-Template.XYPad.events({
-
-	
-
-});
 

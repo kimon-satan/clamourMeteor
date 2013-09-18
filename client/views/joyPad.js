@@ -154,7 +154,7 @@ Template.JoyPad.created = function(){
 
 
 
-Template.JoysPad.events({
+Template.JoyPad.events({
 
 	
 

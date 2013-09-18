@@ -11,8 +11,28 @@
 			{{>bigTextDisplay}}
 		{{/if}}
 
-		{{#if isXyDisplay}}
-			{{>xyDisplay}}
+		{{#if isXyOnOff}}
+			{{>XyOnOff}}
+		{{/if}}
+		
+		{{#if isXyCont}}
+			{{>XyCont}}
+		{{/if}}
+		
+		{{#if isJoyPad}}
+			{{>JoyPad}}
+		{{/if}}
+		
+		{{#if isDragOnOff}}
+			{{>DragOnOff}}
+		{{/if}}
+		
+		{{#if isDragCont}}
+			{{>DragCont}}
+		{{/if}}
+		
+		{{#if isTargetPad}}
+			{{>TargetPad}}
 		{{/if}}
 		
 		{{#if isButtonDisplay}}
@@ -35,9 +55,7 @@
 	</div>
 </template>
 
-<template name= "xyDisplay">
-	{{>XYPad}}
-</template>
+
 
 <template name= "buttonDisplay">
 	<H2>A Button Display</H2>

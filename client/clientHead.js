@@ -4,6 +4,7 @@ timeStampHandle = null;
 
 Meteor.startup(function(){
 	
+	isKineticLoaded = false;
 	Session.set('clamourReady', false);
 	Session.set('isAdmin', false);
 	
