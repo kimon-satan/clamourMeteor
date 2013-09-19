@@ -160,7 +160,7 @@ Meteor.methods({
 										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat},	
 										});
 										
-					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: "BIG_TEXT"});
+					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: "BIG_TEXT", ctrlIndex: "aaaaa"});
 				
 				}
 			}
@@ -203,14 +203,14 @@ Meteor.methods({
 	
 	},
 	
-	sendStartDrag: function(row, seat, ts, x, y, type) {
+	sendStartDrag: function(row, seat, ctrlIndex, ts, x, y, type) {
   
 	  var buf;
 	  var index = row + '_' + seat;
 	  
 	  buf = osc.toBuffer({
 		address: "/node/startDrag",
-		args: [row, seat, x, y, type]
+		args: [row, seat, ctrlIndex, x, y, type]
 	  });
 	  
 	  //ignore repeat messages
@@ -222,20 +222,20 @@ Meteor.methods({
 	  
 	  //delayed message handling
 	 nodes[index].prevMsg = {msg: 'startDrag', ts: ts};
-	console.log("startDrag: " + index + " ts: " + ts)
+	//console.log("startDrag: " + index + " ts: " + ts)
 	 return udp.send(buf, 0, buf.length, outport, "localhost");
 	 
 
 	},
 	
-	sendDragOff: function(row, seat, ts) {
+	sendDragOff: function(row, seat, ctrlIndex, ts) {
   
 	  var buf;
 	  var index = row + '_' + seat;
 	  
 	  buf = osc.toBuffer({
 		address: "/node/endDrag",
-		args: [row, seat]
+		args: [row, seat, ctrlIndex]
 	  });
 	  
 	  //ignore repeat messages
@@ -253,14 +253,14 @@ Meteor.methods({
 
 	},
 	
-	sendNodeOn: function(row, seat, ts, x, y, type) {
+	sendNodeOn: function(row, seat, ctrlIndex ,ts, x, y, type) {
   
 	  var buf;
 	  var index = row + '_' + seat;
 	  
 	  buf = osc.toBuffer({
 		address: "/node/on",
-		args: [row, seat, x, y, type]
+		args: [row, seat, ctrlIndex, x, y, type]
 	  });
 	  
 	  //ignore repeat messages
@@ -282,14 +282,14 @@ Meteor.methods({
 
 	},
 	
-	sendNodeOff: function(row, seat, ts, x, y) {
+	sendNodeOff: function(row, seat, ctrlIndex, ts, x, y) {
   
 	  var buf;
 	  var index = row + '_' + seat;
 	  
 	  buf = osc.toBuffer({
 				address: "/node/off",
-				args: [row, seat]
+				args: [row, seat, ctrlIndex]
 	  });
 	  
   	  //ignore repeat & delayed messages
@@ -310,13 +310,13 @@ Meteor.methods({
 	  
 	},
 	
-	updateNode: function(row, seat, x, y, type) {
+	updateNode: function(row, seat, ctrlIndex, x, y, type) {
   
 	  var buf;
 
 	  buf = osc.toBuffer({
 				address: "/node/position",
-				args: [row, seat, x,y, type]
+				args: [row, seat, ctrlIndex,x,y, type]
 	  });
   
 	  return udp.send(buf, 0, buf.length, outport, "localhost");
@@ -336,64 +336,17 @@ parseIncomingOsc = function(msg){
 		var add_array = add_str.split('/');
 		var arg_array = msg.elements[i].args;
 	
-		if(add_array[0] == 'allClients'){
-	
-				if(add_array[1] == 'newControl'){
-			
-					var nc_index = arg_array[0].value;
-			
-					var d = new Date();
-			
-					UserData.find({}).forEach(function(user){
-				
-						if(user.displayType != nc_index){
-					
-							nodes[user.uname].isOn = false;
-							//to stop rogue messages
-							nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
-					
-						}
-				
-					});
-						
-					if(nc_index == 0){
-						UserData.update({}, {$set: {displayType: nc_index, displayText: arg_array[1].value}}, {multi: true});
-					}else{
-						UserData.update({}, {$set: {displayType: nc_index}}, {multi: true});
-					}
-			
-					console.log('all clients to display: ' + nc_index);
-				}
-				
-		}else if(add_array[0] == 'newControl'){
-			
+		if(add_array[0] == 'newControl'){
 			
 			var un = arg_array[0].value;
-			
 			var nc_index = arg_array[1].value;
-			
 			var d = new Date();
-			
 			var user = UserData.findOne({uname: un});
 			
-			if(user.displayType != nc_index){
-					
-				nodes[user.uname].isOn = false;
-				//to stop rogue messages
-				//nodes[user.uname].prevMsg = {msg: 'off', ts: d.getTime() + 1000} 
-					
-			}
+			//always turn off nodes for a new control		
+			nodes[user.uname].isOn = false;
 			
-			if(nc_index == "BIG_TEXT" || nc_index == "SMALL_TEXT"){
-				if(arg_array.length == 3){
-					UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: arg_array[2].value}});
-				}else{
-					UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: ""}});
-				}
-			}else{
-				UserData.update({uname: un}, {$set: {displayType: nc_index}});
-			}
-			
+			UserData.update({uname: un}, {$set: {displayType: nc_index, displayText: arg_array[2].value, ctrlIndex: arg_array[3].value}});
 			
 			
 		}else if(add_array[0] == 'newText'){
@@ -401,8 +354,6 @@ parseIncomingOsc = function(msg){
 			
 			var un = arg_array[0].value;
 			var text = arg_array[1].value;
-			
-			//console.log(text);
 			
 			UserData.update({uname: un}, {$set: {displayText: text}});
 			
