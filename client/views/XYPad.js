@@ -2,8 +2,11 @@ var x = 0, y = 0;
 
 var setupXyOnOff = function(){
 
-	var stage, shapeLayer, sendOn, sendOff, isDown = false;
+	var stage, ctrlIndex, shapeLayer, sendOn, sendOff, isDown = false;
 	
+	ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+
+
 	stage = new Kinetic.Stage({
 	
 		container: 'canvasDiv',
@@ -50,7 +53,7 @@ var setupXyOnOff = function(){
 		
 		sendOn = setInterval(function(){
 			
-			Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, "xy",function(err, res){
+			Meteor.call('sendNodeOn', r , s , ctrlIndex ,d.getTime(), x, y, "xy",function(err, res){
 				clearInterval(sendOn);
 			});
 		},100);
@@ -99,7 +102,7 @@ var setupXyOnOff = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex ,
 			x/stage.getWidth() , 
 			y/stage.getHeight(),
 			"xy"
@@ -122,7 +125,7 @@ var setupXyOnOff = function(){
 			
 			sendOff = setInterval(function(){
 				
-				Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
+				Meteor.call('sendNodeOff', r, s, ctrlIndex, d.getTime(), function(){
 					clearInterval(sendOff);
 				});
 			},100);
@@ -144,6 +147,8 @@ var setupXyOnOff = function(){
 var setupXyCont = function(){
 
 	var stage, shapeLayer;
+
+	var ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
 	
 	stage = new Kinetic.Stage({
 	
@@ -183,7 +188,7 @@ var setupXyCont = function(){
 		y = mousePos.y;
 		mCircle.setX(x);
 		mCircle.setY(y);
-		Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+		Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex,
 		x/stage.getWidth() , 
 		y/stage.getHeight(),
 		"xy");
@@ -215,18 +220,20 @@ Template.XyOnOff.created = function(){
 
 Template.XyCont.created = function(){
 	
-	var r = Meteor.user().profile.row;
+	/*var r = Meteor.user().profile.row;
 	var s = parseInt(Meteor.user().profile.seat);
 	var d = new Date();
 	
+	//this needs changing
 	var sendOn = setInterval(function(){
 		
-		Meteor.call('sendNodeOn', r , s , d.getTime(), 0.5, 0.5, "xy",function(err, res){
+		Meteor.call('sendNodeOn', r , s ,ctrlIndex,  d.getTime(), 0.5, 0.5, "xy",function(err, res){
 			clearInterval(sendOn);
 		});
-	},100);
+	},100);*/
 		
 	
+	//do without kinetic js
 
 	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
 	
@@ -240,16 +247,16 @@ Template.XyCont.created = function(){
 
 Template.XyCont.destroyed = function(){
 
-	var r = Meteor.user().profile.row;
+	/*var r = Meteor.user().profile.row;
 	var s = parseInt(Meteor.user().profile.seat);
 	var d = new Date();
 	
 	var sendOff = setInterval(function(){
 		
-		Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
+		Meteor.call('sendNodeOff', r, s,ctrlIndex, d.getTime(), function(){
 			clearInterval(sendOff);
 		});
-	},100);
+	},100);*/
 
 
 };
