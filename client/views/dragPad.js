@@ -2,8 +2,10 @@ var x = 0, y = 0, sw = 400, sh = 255;
 
 var setupDragOnOff = function(){
 
-	var stage, shapeLayer, sendOn, sendOff, isDown = false;
+	var stage, shapeLayer, sendOn, sendOff, isDown = false, ctrlIndex;
 	
+	ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+
 	stage = new Kinetic.Stage({
 	
 		container: 'canvasDiv',
@@ -51,7 +53,7 @@ var setupDragOnOff = function(){
 		
 		sendOn = setInterval(function(){
 			
-			Meteor.call('sendNodeOn', r , s , d.getTime(), x, y, "drag", function(err, res){
+			Meteor.call('sendNodeOn', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
 				clearInterval(sendOn);
 			});
 		},100);
@@ -100,7 +102,7 @@ var setupDragOnOff = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex,
 			x/stage.getWidth() , 
 			y/stage.getHeight(),
 			"drag");
@@ -121,7 +123,7 @@ var setupDragOnOff = function(){
 			
 			sendOff = setInterval(function(){
 				
-				Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
+				Meteor.call('sendNodeOff', r, s, ctrlIndex, d.getTime(), function(){
 					clearInterval(sendOff);
 				});
 			},100);
@@ -143,7 +145,8 @@ var setupDragOnOff = function(){
 
 var setupDragCont = function(){
 
-	var stage, shapeLayer, isDown = false, sendStartD, sendDragOff;
+	var stage, shapeLayer, isDown = false, sendStartD, sendDragOff, ctrlIndex;
+	ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
 	
 	stage = new Kinetic.Stage({
 	
@@ -190,7 +193,7 @@ var setupDragCont = function(){
 		
 		sendStartD = setInterval(function(){
 			
-			Meteor.call('sendStartDrag', r , s , d.getTime(), x, y, "drag", function(err, res){
+			Meteor.call('sendStartDrag', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
 				clearInterval(sendStartD);
 			});
 		},100);
@@ -241,7 +244,7 @@ var setupDragCont = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), 
+			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex, 
 			x/stage.getWidth() , 
 			y/stage.getHeight(),
 			"drag_c");
@@ -267,7 +270,7 @@ var setupDragCont = function(){
 			
 			sendDragOff = setInterval(function(){
 				
-				Meteor.call('sendDragOff', r, s, d.getTime(), function(){
+				Meteor.call('sendDragOff', r, s, ctrlIndex, d.getTime(), function(){
 					clearInterval(sendDragOff);
 				});
 			},100);
@@ -305,19 +308,6 @@ Template.DragOnOff.created = function(){
 
 Template.DragCont.created = function(){
 	
-	
-	var r = Meteor.user().profile.row;
-	var s = parseInt(Meteor.user().profile.seat);
-	var d = new Date();
-	
-	var sendOn = setInterval(function(){
-		
-		Meteor.call('sendNodeOn', r , s , d.getTime(), 0.5, 0.5, "drag_c_init",function(err, res){
-			clearInterval(sendOn);
-		});
-	},100);
-		
-	
 
 	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
 	
@@ -329,20 +319,6 @@ Template.DragCont.created = function(){
 
 };
 
-Template.DragCont.destroyed = function(){
 
-	var r = Meteor.user().profile.row;
-	var s = parseInt(Meteor.user().profile.seat);
-	var d = new Date();
-	
-	var sendOff = setInterval(function(){
-		
-		Meteor.call('sendNodeOff', r, s, d.getTime(), function(){
-			clearInterval(sendOff);
-		});
-	},100);
-
-
-};
 
 

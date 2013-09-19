@@ -220,20 +220,7 @@ Template.XyOnOff.created = function(){
 
 Template.XyCont.created = function(){
 	
-	/*var r = Meteor.user().profile.row;
-	var s = parseInt(Meteor.user().profile.seat);
-	var d = new Date();
-	
-	//this needs changing
-	var sendOn = setInterval(function(){
-		
-		Meteor.call('sendNodeOn', r , s ,ctrlIndex,  d.getTime(), 0.5, 0.5, "xy",function(err, res){
-			clearInterval(sendOn);
-		});
-	},100);*/
-		
-	
-	//do without kinetic js
+	//do this without kinetic js
 
 	$.getScript("lib/kinetic-v4.6.0.min.js", function(){
 	
@@ -245,21 +232,6 @@ Template.XyCont.created = function(){
 
 };
 
-Template.XyCont.destroyed = function(){
-
-	/*var r = Meteor.user().profile.row;
-	var s = parseInt(Meteor.user().profile.seat);
-	var d = new Date();
-	
-	var sendOff = setInterval(function(){
-		
-		Meteor.call('sendNodeOff', r, s,ctrlIndex, d.getTime(), function(){
-			clearInterval(sendOff);
-		});
-	},100);*/
-
-
-};
 
 
 
