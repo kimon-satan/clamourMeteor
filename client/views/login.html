@@ -24,6 +24,12 @@
 		<br/>
 		
 		<button class="login">Login</button>
+
+		{{#if getError}}
+		<div>
+			<h3 id="error">{{getError}}</h3>
+		</div>
+		{{/if}}
 	</div>
 
 </template>

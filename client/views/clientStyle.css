@@ -64,6 +64,10 @@ h2{
 	font-size: 25pt;
 }
 
+#error{
+	color: red;
+}
+
 .canvasContainer{
 	position: relative;
 	margin: 60px auto auto auto;

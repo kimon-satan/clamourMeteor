@@ -44,6 +44,7 @@ Meteor.startup(function(){
 		return true;	
 	}
 
+
 	
 	//setup the osc
 	
@@ -132,6 +133,12 @@ Meteor.startup(function(){
 
 Meteor.methods({
 
+	logoutEveryone:function(){
+
+		   Meteor.users.update({}, {$set: { "profile.isActive": false, "profile.isLogout":true}});
+
+	},
+
 
 	resetDataBases:function(user){
 		
@@ -157,7 +164,7 @@ Meteor.methods({
 				
 					var id = Accounts.createUser({username:  row + "_" + seat, 
 										password: '1234',
-										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat},	
+										profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat, isLogout: false},	
 										});
 										
 					UserData.insert({uname: row + '_' +seat,  id: id, currentRow: row, currentSeat: seat, displayType: "BIG_TEXT", ctrlIndex: "aaaaa"});
