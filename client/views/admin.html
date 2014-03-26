@@ -8,6 +8,10 @@
 	
 			{{#if isAdminPriv}}
 				<H1>Admin Page</H1>
+				<DIV><button id="allReset">Reset all players</button></DIV>
+				<DIV>clientOut: {{isClientOut}}</DIV>
+				<DIV><button id="clientOut">Toggle clientOut</button></DIV>
+				<DIV><button id="controlReset">Reset controls</button></DIV>
 				{{> admin_playerTable}}
 			{{/if}}
 	
@@ -46,6 +50,7 @@
 					<th>isActive</th>
 					<th>prev checkin</th>
 					<th>displayType</th>
+					<th>resetUser</th>
 				</tr>
 			</thead>
 				<tbody>
@@ -68,5 +73,6 @@
 		<td>{{profile.isActive}}</td>
 		<td>{{profile.prevTS}}</td>
 		<td>{{userData.displayType}}</td>
+		<td><button>reset</button></td>
 	</tr>
 </template>

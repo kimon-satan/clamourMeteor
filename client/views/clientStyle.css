@@ -20,7 +20,7 @@ body {
 
 #admin{
 
-	width: 800px;
+	width: 1200px;
 
 }
 
@@ -54,6 +54,12 @@ body {
 	height:23px;
 	font-size:18px;
 	margin: 10px 0;
+}
+
+#logout{
+	margin: 0px 5px;
+	font-size:12px;
+	height:18px;
 }
 
 h1{

@@ -2,9 +2,9 @@ var x = 0, y = 0, sw = 400, sh = 255;
 
 var setupDragOnOff = function(){
 
-	var stage, shapeLayer, sendOn, sendOff, isDown = false, ctrlIndex;
+	var stage, shapeLayer, sendOn, sendOff, isDown = false, prevUpdate = 0;
 	
-	ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+	
 
 	stage = new Kinetic.Stage({
 	
@@ -51,12 +51,22 @@ var setupDragOnOff = function(){
 		var s = parseInt(Meteor.user().profile.seat);
 		var d = new Date();
 		
-		sendOn = setInterval(function(){
-			
-			Meteor.call('sendNodeOn', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
-				clearInterval(sendOn);
-			});
-		},100);
+		if(clamourData.findOne({item: 'clientOut'}).value){
+		
+			clearInterval(sendOn);
+			var ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+			sendOn = setInterval(function(){
+				
+				var counter = 0;
+				Meteor.call('sendNodeOn', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
+					clearInterval(sendOn);
+				});
+				counter += 1;
+				if(counter > 10)clearInterval(sendOn);
+				
+			},100);
+		
+		}
 		
 		
 	};
@@ -102,11 +112,23 @@ var setupDragOnOff = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex,
-			x/stage.getWidth() , 
-			y/stage.getHeight(),
-			"drag");
+			var d = new Date().getTime();
 			
+			
+			if(clamourData.findOne({item: 'clientOut'}).value){
+				
+				if(d > prevUpdate + 50){
+				
+					prevUpdate = d;
+					ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+				
+					Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex,
+					x/stage.getWidth() , 
+					y/stage.getHeight(),
+					"drag");
+				}
+			
+			}
 		
 		}
 	});
@@ -121,12 +143,20 @@ var setupDragOnOff = function(){
 			var s = parseInt(Meteor.user().profile.seat);
 			var d = new Date();
 			
-			sendOff = setInterval(function(){
+			
+			if(clamourData.findOne({item: 'clientOut'}).value){
 				
-				Meteor.call('sendNodeOff', r, s, ctrlIndex, d.getTime(), function(){
-					clearInterval(sendOff);
-				});
-			},100);
+				var ctrlIndex = UserData.findOne({id: Meteor.user()._id}).ctrlIndex;
+				clearInterval(sendOff);
+				sendOff = setInterval(function(){
+					var counter;
+					Meteor.call('sendNodeOff', r, s, ctrlIndex, d.getTime(), function(){
+						clearInterval(sendOff);
+					});
+					if(counter >= 10)clearInterval(sendOff);
+				},100);
+			
+			}
 			isDown = false;
 			mCircle.remove();
 			stage.draw();
@@ -191,12 +221,16 @@ var setupDragCont = function(){
 		var s = parseInt(Meteor.user().profile.seat);
 		var d = new Date();
 		
-		sendStartD = setInterval(function(){
+		if(clamourData.findOne({item: 'clientOut'}).value){
+		
+			sendStartD = setInterval(function(){
 			
-			Meteor.call('sendStartDrag', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
-				clearInterval(sendStartD);
-			});
-		},100);
+				Meteor.call('sendStartDrag', r , s , ctrlIndex, d.getTime(), x, y, "drag", function(err, res){
+					clearInterval(sendStartD);
+				});
+			},100);
+		
+		}
 		
 		isDown = true;
 		
@@ -244,11 +278,13 @@ var setupDragCont = function(){
 			y = mousePos.y;
 			mCircle.setX(x);
 			mCircle.setY(y);
-			Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex, 
-			x/stage.getWidth() , 
-			y/stage.getHeight(),
-			"drag_c");
 			
+			if(clamourData.findOne({item: 'clientOut'}).value){
+				Meteor.call('updateNode', Meteor.user().profile.row, parseInt(Meteor.user().profile.seat), ctrlIndex, 
+				x/stage.getWidth() , 
+				y/stage.getHeight(),
+				"drag_c");
+			}
 		
 		}
 	});
@@ -268,12 +304,16 @@ var setupDragCont = function(){
 			var s = parseInt(Meteor.user().profile.seat);
 			var d = new Date();
 			
-			sendDragOff = setInterval(function(){
+			if(clamourData.findOne({item: 'clientOut'}).value){
+			
+				sendDragOff = setInterval(function(){
 				
-				Meteor.call('sendDragOff', r, s, ctrlIndex, d.getTime(), function(){
-					clearInterval(sendDragOff);
-				});
-			},100);
+					Meteor.call('sendDragOff', r, s, ctrlIndex, d.getTime(), function(){
+						clearInterval(sendDragOff);
+					});
+			
+				},100);
+			}
 		}
 		
 		

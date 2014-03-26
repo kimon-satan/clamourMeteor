@@ -1,6 +1,6 @@
 <head>
   <title>Clamour</title>
-  <meta id="Viewport" name="viewport" width="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=yes" media ="handheld">
+<meta id="Viewport" name="viewport" width="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=yes" media ="handheld">
 
 	<script type="text/javascript">
 		$(function(){
@@ -23,6 +23,8 @@
 </head>
 
 <body>
+
+
 	
 	<div id="admin">
 	{{#if isAdmin}}
@@ -31,14 +33,15 @@
 	</div>
 
 	<div id = "outer">
-	{{#unless isAdmin}}
-		{{>userHead}}
-	{{/unless}}
+		{{#unless isAdmin}}
+			{{>userHead}}
+		{{/unless}}
 	
-	{{#if isWaiting}}
-		{{>waitSplash}}
-	{{/if}}
+		{{#if isWaiting}}
+			{{>waitSplash}}
+		{{/if}}
 	</div>
+
 </body>
 
 <template name = "userHead">

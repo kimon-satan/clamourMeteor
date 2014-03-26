@@ -11,7 +11,7 @@ getAuth = function(user){
 }
 
 //osc variables
-var osc, dgram, udp, outport, inport, sock, nodes;
+var osc, dgram, udp, outport, inport, sock, nodes, sendOut;
 
 Meteor.publish('clamourData', function(){ return clamourData.find({}); });
 Meteor.publish('SUsers', function(user){ 
@@ -44,13 +44,14 @@ Meteor.startup(function(){
 		return true;	
 	}
 
-
+	sendOut = true;
 	
 	//setup the osc
 	
 	osc = Meteor.require('osc-min');
-	dgram = Meteor.require ('dgram')
-	udp = dgram.createSocket('udp4')
+	dgram = Meteor.require ('dgram');
+	udp = dgram.createSocket('udp4');
+	outAdd = "localhost";
 	outport = 41234;
 	inport = 42345;
 	
@@ -110,7 +111,7 @@ Meteor.startup(function(){
 			args: onLineUsers
 		});
 		
-		udp.send(buf, 0, buf.length, outport, "localhost");
+		udp.send(buf, 0, buf.length, outport, outAdd);
 		
 	
 	},10000);
@@ -133,9 +134,52 @@ Meteor.startup(function(){
 
 Meteor.methods({
 
-	logoutEveryone:function(){
 
-		   Meteor.users.update({}, {$set: { "profile.isActive": false, "profile.isLogout":true}});
+	toggleClientOut: function(user){
+	
+		if(getAuth(user)){
+		
+			console.log("toggleClientOut");
+			sendOut = !clamourData.findOne({item: 'clientOut'}).value;
+			clamourData.update({item: 'clientOut'}, {$set: {value: sendOut}});
+			
+		}
+
+	},
+	
+	controlReset: function(user){
+	
+		if(getAuth(user)){
+		
+			console.log("controlReset");
+			UserData.update({},{$set: {displayType: "BIG_TEXT", text:"_", ctrlIndex: "aaaaa"}}, {multi: true});
+			
+		}
+
+	},
+
+
+	resetUser:function(username, user){
+		
+		
+	
+		if(getAuth(user)){
+			
+			console.log('removing ' + username);
+			
+			Meteor.users.remove({username: username});
+			
+			var row = username.substring(0,1);
+			var seat = parseInt(username.substring(2));
+			
+			// create a new user
+			var id = Accounts.createUser({username:  username, 
+						password: '1234',
+						profile: {isActive: false, devId: null, prevTS: 0, admin: false, row: row, seat: seat, isLogout: false},	
+						});
+						
+			UserData.update({uname: username}, {$set: {id: id}});
+		}
 
 	},
 
@@ -150,6 +194,7 @@ Meteor.methods({
 			clamourData.remove({});
 			clamourData.insert({item: 'numSeats', value: numSeats});
 			clamourData.insert({item: 'numRows', value: numRows});
+			clamourData.insert({item: 'clientOut', value: true});
 	
 			//repopulate users
 			
@@ -211,7 +256,8 @@ Meteor.methods({
 	},
 	
 	sendStartDrag: function(row, seat, ctrlIndex, ts, x, y, type) {
-  
+  		
+  	  if(!sendOut)return;
 	  var buf;
 	  var index = row + '_' + seat;
 	  
@@ -230,13 +276,14 @@ Meteor.methods({
 	  //delayed message handling
 	 nodes[index].prevMsg = {msg: 'startDrag', ts: ts};
 	//console.log("startDrag: " + index + " ts: " + ts)
-	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	 return udp.send(buf, 0, buf.length, outport, outAdd);
 	 
 
 	},
 	
 	sendDragOff: function(row, seat, ctrlIndex, ts) {
   
+  	  if(!sendOut)return;
 	  var buf;
 	  var index = row + '_' + seat;
 	  
@@ -255,13 +302,14 @@ Meteor.methods({
 	  //delayed message handling
 	 nodes[index].prevMsg = {msg: 'endDrag', ts: ts};
 	console.log("endDrag: " + index + " ts: " + ts)
-	 return udp.send(buf, 0, buf.length, outport, "localhost");
+	 return udp.send(buf, 0, buf.length, outport, outAdd);
 	 
 
 	},
 	
 	sendNodeOn: function(row, seat, ctrlIndex ,ts, x, y, type) {
   
+  	  if(!sendOut)return;
 	  var buf;
 	  var index = row + '_' + seat;
 	  
@@ -272,7 +320,10 @@ Meteor.methods({
 	  
 	  //ignore repeat messages
 	  try{
-	  	if(nodes[index].prevMsg.ts >= ts)return true;
+	  	if(nodes[index].prevMsg.ts >= ts){
+	  	console.log("old message");
+	  	return true;
+	  	}
 	  }catch(e){
 	  	console.log('no prev message stored');
 	  }
@@ -283,7 +334,9 @@ Meteor.methods({
 	if(!nodes[index].isOn){
 		console.log("nodeOn: " + index + " ts: " + ts)
 	 	nodes[index].isOn = true;
-	 	return udp.send(buf, 0, buf.length, outport, "localhost");
+	 	return udp.send(buf, 0, buf.length, outport, outAdd);
+	 }else{
+	 	console.log("node already on");
 	 }
 	 
 
@@ -291,6 +344,7 @@ Meteor.methods({
 	
 	sendNodeOff: function(row, seat, ctrlIndex, ts, x, y) {
   
+  	  if(!sendOut)return;
 	  var buf;
 	  var index = row + '_' + seat;
 	  
@@ -311,7 +365,9 @@ Meteor.methods({
 	  if(nodes[index].isOn){
 		  console.log("nodeOff: " + index + " ts: " + ts);
 		  nodes[index].isOn = false;
-		  return udp.send(buf, 0, buf.length, outport, "localhost");
+		  return udp.send(buf, 0, buf.length, outport, outAdd);
+	  }else{
+	  	console.log("node already off");
 	  }
 	  
 	  
@@ -319,6 +375,7 @@ Meteor.methods({
 	
 	updateNode: function(row, seat, ctrlIndex, x, y, type) {
   
+  	  if(!sendOut)return;
 	  var buf;
 
 	  buf = osc.toBuffer({
@@ -326,7 +383,7 @@ Meteor.methods({
 				args: [row, seat, ctrlIndex,x,y, type]
 	  });
   
-	  return udp.send(buf, 0, buf.length, outport, "localhost");
+	  return udp.send(buf, 0, buf.length, outport, outAdd);
 	}
 	
 });
@@ -342,9 +399,12 @@ parseIncomingOsc = function(msg){
 		var add_str = msg.elements[i].address.substr(1);
 		var add_array = add_str.split('/');
 		var arg_array = msg.elements[i].args;
+		
+			//console.log("msg received for : ");
 	
 		if(add_array[0] == 'newControl'){
 			
+			//console.log(arg_array[0].value);
 			var un = arg_array[0].value;
 			var nc_index = arg_array[1].value;
 			var d = new Date();

@@ -58,4 +58,12 @@ Template.smallTextDisplay.displayText = function(){
 	if(u)return (u.displayText);
 }
 
+Template.gameMain.events({
+	
+	'click button#logout':function(){
+		
+		Meteor.logout();
+	}
+
+});
 

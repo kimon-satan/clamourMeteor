@@ -1,7 +1,8 @@
 <template name = "gameMain">
 
 	<div class="container">
-		<I>logged in for seat {{currentUser.username}}</I>	
+	
+		<I>logged in as seat {{currentUser.username}}</I><button id="logout">logout</button>	
 
 		{{#if isSmallTextDisplay}}
 			{{>smallTextDisplay}}
@@ -38,6 +39,8 @@
 		{{#if isButtonDisplay}}
 			{{>buttonDisplay}}
 		{{/if}}
+		
+		
 
 	</div>
 

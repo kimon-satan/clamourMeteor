@@ -7,6 +7,7 @@ Meteor.startup(function(){
 	isKineticLoaded = false;
 	Session.set('clamourReady', false);
 	Session.set('isAdmin', false);
+	Session.set('isCanvas', false);
 	
 });
 
@@ -17,11 +18,10 @@ Meteor.startup(function(){
 Meteor.subscribe('clamourData', function(){Session.set('clamourReady', true);});
 Meteor.subscribe('userData');
 
-
-
 Handlebars.registerHelper('isClamourReady', function(){return Session.get('clamourReady')});
 Handlebars.registerHelper('isAdmin', function(){return Session.get('isAdmin')});
 Handlebars.registerHelper('isWaiting', function(){return Session.get('isWaiting')});
+Handlebars.registerHelper('isCanvas', function(){return Session.get('isCanvas')});
 
 Template.userHead.created = function(){
 	
